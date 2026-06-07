@@ -1,28 +1,28 @@
-# HW16 - Servo Control with ADC Feedback and INA219 Current Sensing
+# HW16 – STM32 Servo Drive with ADC Feedback and INA219 Current Sensing
 
 ## Overview
-This project implements a closed-loop test setup for a modified RC servo using the STM32 NUCLEO-C092RC board.  
+This project uses the STM32 NUCLEO-C092RC to drive a modified RC servo motor and measure its behavior with both position and current feedback.
+
 The system includes:
-
 - ADC reading from the servo potentiometer
-- PWM motor driving through a DRV8833 H-bridge
-- Current sensing with an INA219 over I2C
-- A 1 kHz timer interrupt for periodic control timing
-- Safety limits based on potentiometer ADC range
+- PWM motor drive through a DRV8833 H-bridge
+- INA219 current sensing over I2C
+- a 1 kHz timer-based control structure
+- safety limits based on potentiometer ADC values
 
-The motor is driven in a simple repeating sequence:
-
+The motor cycles through:
 1. Forward
 2. Off
 3. Reverse
 4. Off
 
-During operation, the STM32 continuously prints the potentiometer reading, INA219 data, and current estimate through the serial port.
+During operation, the STM32 prints ADC position data, INA219 current data, and system state to the serial monitor.
 
 ---
 
-## Hardware Used
+## Hardware Setup
 
+### Main components
 - STM32 NUCLEO-C092RC
 - Modified RC servo
 - DRV8833 motor driver
@@ -30,58 +30,58 @@ During operation, the STM32 continuously prints the potentiometer reading, INA21
 - External battery supply for motor power
 - Breadboard and jumper wires
 
+### Hardware photo
+![HW16 wiring and hardware setup](HW16.jpg)
+
 ---
 
 ## Wiring Summary
 
 ### Servo potentiometer
-- Potentiometer output -> ADC input `PA0` (`A0` on board)
-- Potentiometer power -> `3.3V`
-- Potentiometer ground -> `GND`
+- Potentiometer output → `PA0` (`A0`)
+- Potentiometer power → `3.3V`
+- Potentiometer ground → `GND`
 
 ### DRV8833
-- PWM output 1 -> `PA8`
-- PWM output 2 -> `PA1`
-- Driver logic ground -> common `GND`
-- Driver sleep/enable -> `3.3V`
-- Motor power -> external battery supply
+- PWM output 1 → `PA8`
+- PWM output 2 → `PA1`
+- Driver enable / sleep → `3.3V`
+- Driver ground → common `GND`
+- Motor power → external battery supply
 
 ### INA219
-- `SDA` -> `PA6` (board location used as `D12`)
-- `SCL` -> `PA7` (board location used as `D11`)
-- `VCC` -> `3.3V`
-- `GND` -> `GND`
+- `SDA` → `PA6` (board connection used at `D12`)
+- `SCL` → `PA7` (board connection used at `D11`)
+- `VCC` → `3.3V`
+- `GND` → `GND`
 
 ### Motor current path
-The INA219 was inserted in series with the motor current path so current could be measured during forward and reverse motion.
+The INA219 was inserted in series with the motor path so that motor current could be measured during both forward and reverse motion.
 
 ---
 
 ## Software Features
-
-- `ADC1` reads the servo potentiometer position
-- `TIM1` generates PWM for motor drive
-- `TIM2` runs at 1 kHz and provides timing ticks
-- `I2C2` communicates with the INA219
-- Serial output is used for debugging and demonstration
-
-The code includes:
-- Motor state machine
+The final code includes:
+- ADC sampling of the servo potentiometer
+- INA219 register reads over I2C
+- PWM motor control through TIM1
+- timer-based periodic control using TIM2
+- motor state switching
 - ADC-based safety stop
-- INA219 shunt voltage and current estimation
-- Periodic serial printing for monitoring
+- serial monitoring output
+
+The timer structure is stable because the interrupt only handles timing, while sensor reads and serial printing are performed in the main loop.
 
 ---
 
 ## Safety Limits
+The motor is stopped if the ADC reading moves outside the allowed range.
 
-The system uses ADC limits to stop the motor if the potentiometer reading moves outside the allowed range.
-
-Example limits used in testing:
+Example limits used in the final test:
 - `ADC_MIN_LIMIT = 380`
 - `ADC_MAX_LIMIT = 2600`
 
-These limits were tuned experimentally based on the actual motion range of the modified servo.
+These values were chosen experimentally based on the real motion range of the modified servo.
 
 ---
 
